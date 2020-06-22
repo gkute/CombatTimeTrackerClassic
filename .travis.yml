@@ -1,0 +1,16 @@
+sudo: false
+language: c
+ 
+# Only build tags
+if: tag IS present
+
+addons:
+  apt:
+    packages:
+    - pandoc
+ 
+script: curl -s https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh | bash
+ 
+branches:
+  only:
+  - /^v\d+\.\d+(\.\d+)?(\.\d+)?(-\S*)?$/
