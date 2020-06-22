@@ -10,6 +10,7 @@ local time = 0
 local fontTableOptions = {}
 local bossEncounter = false
 local loadOptionsAfterCombat = false
+local isRaidTime = false
 local hours = "00"
 local minutes = "00"
 local seconds = "00"
@@ -19,6 +20,9 @@ local fontDropDownMorpheus = 0
 local cttElapsedSeconds = 0
 local db
 local globalMenu
+local InClassicRaidZone = false
+local raidStartTime = 0
+--local DateTime = os.date("*t", os.time());
 local defaultSavedVars = {
 	global = {
 		minimap = {
@@ -34,56 +38,34 @@ local instanceTypes = {
     "Everywhere"
 }
 
-local instanceZones = {
-}
-
-local raidInstanceZones = {
-    
-}
-
 -- Get encounter ID's 
 --/run local i=1 while EJ_GetInstanceByIndex(i,true)do local a1,a2=EJ_GetInstanceByIndex(i,true)print(a1,a2)EJ_SelectInstance(a1)i=i+1 local j=1 while EJ_GetEncounterInfoByIndex(j,a1)do local b1,_,b2=EJ_GetEncounterInfoByIndex(j,a1)print(b2,b1)j=j+1 end end
 
-local BoDBosses = {
--- 9 bosses
-    2265,
-    2263,
-    2266,
-    2271,
-    2268,
-    2272,
-    2276,
-    2280,
-    2281
+local instanceZones = {
+    "Atal'Dazar",
+    "Freehold",  
+    "King's Rest",
+    "Shrine of the Storm", 
+    "Siege of Boralus", 
+    "Temple of Sethraliss", 
+    "The Motherload!!", 
+    "The Underrot", 
+    "Tol Dagor", 
+    "Waycrest Manor"
 }
 
-local CoSBosses = {
--- 2 bosses
-    2269,
-    2273
+local ClassicRaidsIDs = {
+    469, -- Blackwing Lair
+    409, -- Molten Core
+    509, -- Ruins of Ahn'Qiraj
+    531  -- Temple of Ahn'Qiraj
 }
 
-local TEPBosses = {
--- 8 bosses
-    2298,
-    2289,
-    2305,
-    2304,
-    2303,
-    2311,
-    2293,
-    2299
-}
-
-local NTWCBosses = {
-
-}
-
-local difficultyList = {
-    "LFR",
-    "Normal",
-    "Heroic",
-    "Mythic"
+local raidInstanceZones = {
+    "Blackwing Lair",
+    "Molten Core",
+    "Ruins of Ahn'Qiraj",
+    "Temple of Ahn'Qiraj"
 }
 
 
@@ -96,10 +78,10 @@ local AceGUI = LibStub("AceGUI-3.0")
 local LSM = LibStub("LibSharedMedia-3.0")
 local db
 local icon = LibStub("LibDBIcon-1.0")
-local cttLBD = LibStub("LibDataBroker-1.1"):NewDataObject("CombatTimeTracker", {
+local cttLBD = LibStub("LibDataBroker-1.1"):NewDataObject("CombatTimeTrackerClassic", {
 	type = "data source",
 	text = "Combat Time Tracker",
-	icon = "Interface\\Icons\\inv_belt_armor_waistoftime_d_01",
+	icon = "Interface\\Icons\\Spell_nature_timestop",
     OnClick = function(button, buttonPressed)
         if buttonPressed == "RightButton" then
             if db.minimap.lock then
@@ -165,8 +147,6 @@ function CTT:ADDON_LOADED()
     if cttMenuOptions == nil then
         cttMenuOptions = {}
         cttMenuOptions.dropdownValue = 1
-        cttMenuOptions.dropdownValue2 = 1
-        cttMenuOptions.dropdownValue3 = 1
         cttMenuOptions.lockFrameCheckButton = true
         cttMenuOptions.fontVal = 16
         cttMenuOptions.fontName = "Fonts\\MORPHEUS_CYR.TTF"
@@ -187,10 +167,16 @@ function CTT:ADDON_LOADED()
     end
     if fightLogs == nil then
         fightLogs = {}
-        for i=1,36 do
-            fightLogs[i] = "00:00"
-        end
     end
+    if SecondsSpentInCombatDuringRaid == nil then
+        SecondsSpentInCombatDuringRaid = {}
+        SecondsSpentInCombatDuringRaid[1] = "0"
+    end
+    if SecondsSpentInRaidOverall == nil then
+        SecondsSpentInRaidOverall = {}
+        SecondsSpentInRaidOverall[1] = "0"
+    end
+
     CTT_CheckForReload()
     if GetAddOnMetadata("CombatTimeTracker", "Version") >= "2.5" and cttMenuOptions.uiReset then
         CTT_PopUpMessage()
@@ -260,7 +246,6 @@ function CTT:PLAYER_REGEN_DISABLED()
         time = GetTime()
         cttElapsedSeconds = 0
         CTT_InstanceTypeDisplay(cttMenuOptions.instanceType)
-        --self:Print(L["Entering Combat!"])
     else
         return
     end
@@ -273,7 +258,6 @@ function CTT:PLAYER_REGEN_ENABLED()
             CTT_ToggleMenu()
             loadOptionsAfterCombat = false
         end
-        --self:Print(L["Leaving Combat!"])
         cttMenuOptions.timeValues = {hours, minutes, seconds, totalSeconds, miliseconds}
         local min = 0
         local sec = 0
@@ -307,6 +291,9 @@ function CTT:PLAYER_REGEN_ENABLED()
         else
             CTT_DisplayResults(false)
         end
+        print(table.getn(SecondsSpentInCombatDuringRaid))
+        SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid)] = SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid)] + totalSeconds
+
     else
         return 
     end
@@ -316,18 +303,6 @@ end
 function CTT:Encounter_Start(...)
     bossEncounter = true
     local arg1, arg2, arg3, arg4, arg5 = ...
-    --CTT:Print(L["Encounter Started!"])
-    -- local members = {}
-    -- local numMembers = GetNumGroupMembers()
-    -- if numMembers > 1 then
-    --     for i=1,GetNumGroupMembers(),1 do
-    --         members[i] = select(1, GetRaidRosterInfo(i))
-    --     end
-    -- else
-    --     members = {UnitName("player")}
-    -- end
-
-    --table.insert(fightLogs, {arg2, arg3, arg4, arg5, members, false})
     time = GetTime()
     cttElapsedSeconds = 0
     CTT_InstanceTypeDisplay(cttMenuOptions.instanceType)
@@ -340,45 +315,17 @@ function CTT:Encounter_End(...)
         loadOptionsAfterCombat = false
         CTT_ToggleMenu()
     end
-    --CTT:Print(L["Encounter Ended!"])
     local arg1, arg2, arg3, arg4, arg5, arg6 = ...
     local diffIDKey = 0
     if arg6 == 1 then
-        for k,v in pairs(BoDBosses) do
-            if v == arg2 then
-                if arg4 == 14 then 
-                    diffIDKey = 9
-                elseif arg4 == 15 then
-                    diffIDKey = 18 
-                elseif arg4 == 16 then 
-                    diffIDKey = 27
-                end
-
-                local mins,secs = strsplit(":",fightLogs[k + diffIDKey])
-                if (mins =="00" and secs == "00") then
-                    local text = tostring(minutes..":"..seconds)
-                    fightLogs[diffIDKey + k] = text
-                else
-                    if tonumber(seconds) < tonumber(secs) then
-                        if (tonumber(minutes) <= tonumber(mins)) then
-                            local text = tostring(minutes..":"..seconds)
-                            fightLogs[diffIDKey + k] = text
-                        end
-                    else
-                        if tonumber(minutes) < tonumber(mins) then
-                            local text = tostring(minutes..":"..seconds)
-                            fightLogs[diffIDKey + k] = text
-                        end
-                    end
-                    break
-                end
-            end
+        -- if during scheduled raid keep track of total combat time
+        if isRaidTime then
+            local raidTime = tonumber(secondsSpentInRaid[table.getn(secondsSpentInRaid)]) + totalSeconds
+            secondsSpentInRaid = tostring(raidTime)
         end
+        SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid)] = SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid)] + totalSeconds
         CTT_DisplayResultsBosses(arg3, true)
     else
-        --local index = table.getn(fightLogs)
-        --fightLogs[index][7] = {hours, minutes, seconds, totalSeconds, miliseconds}
-        --cttMenuOptions.timeValues = {hours, minutes, seconds, totalSeconds, miliseconds}
         CTT_DisplayResultsBosses(arg3, false)
     end
 end
@@ -479,7 +426,6 @@ function CTT:SlashCommands(input)
         for i=1,36 do
             fightLogs[i] = "00:00"
         end
-        --CTT_SetupSavedVariables()
         CTT:Print(L["Combat Time Tracker has been reset to default settings!"])
     elseif command == "longest" then
         CTT:Print("Your longest fight took (MM:SS): "..longestMin..":"..longestSec..".")
@@ -493,10 +439,19 @@ function CTT:SlashCommands(input)
             cttStopwatchGui:EnableMouse(false)
             CTT:Print(L["Tracker has been locked!"])
         end
-    --[===[@debug@
-    elseif command == "debug" then
-        CallSimulateBossKill()
-    --@end-debug@]===]
+    elseif command == "start" then
+        raidStartTime = GetTime()
+        InClassicRaidZone = true
+        CTT:Print("Start of tracking raid time has started.")
+    elseif command == "end" then
+        local time = GetTime() - raidStartTime
+        InClassicRaidZone = false
+        SecondsSpentInRaidOverall[table.getn(SecondsSpentInRaidOverall)] = (floor(time-floor(time/3600)*3600-floor((time-floor(time/3600)*3600)/60)*60))
+        SecondsSpentInRaidOverall[table.getn(SecondsSpentInRaidOverall) + 1] = "0"
+        SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid) + 1] = "0"
+        CTT:Print("Start of tracking raid time has ended.")
+    -- elseif command == "debug" then
+    --     CallSimulateBossKill()
     end
     
 end
@@ -509,31 +464,6 @@ end
 -- function to check if a ui reset is needed.
 function CTT_CheckForReload()
     if table.getn(fightLogs) < 36 then cttMenuOptions.uiReset = true else cttMenuOptions.uiReset = false end
-end
-
--- function to setup the savedvariables
-function CTT_SetupSavedVariables()
-    --print(menu.textStyleDropDown)
-    -- cttMenuOptions.dropdownValue = 1
-    -- ctt.menu.tab.textStyleDropDown:SetText(cttTextFormatOptions[cttMenuOptions.dropdownValue])
-    -- CTT.menu.textStyleDropDown:SetValue(1)
-    -- cttMenuOptions.timeValues = {"00","00","00","00","00"}
-    -- cttMenuOptions.lockFrameCheckButton = true
-    -- CTT.menu.lockFrameCheckButton:SetValue(true)
-    -- cttMenuOptions.fontVal = 16
-    -- cttMenuOptions.fontName = "Fonts\\MORPHEUS_CYR.TTF"
-    -- CTT.menu.fontPickerDropDown:SetText("Morpheus")
-    -- cttMenuOptions.timeTrackerSize = {100,40}
-    -- cttMenuOptions.textColorPicker = {1,1,1,1}
-    -- CTT.menu.textColorPicker:SetColor(255,255,255)
-    -- cttMenuOptions.textFrameSizeSlider = 0
-    -- CTT.menu.textFrameSizeSlider:SetValue(0)
-    -- cttMenuOptions.backDropAlphaSlider = 1
-    -- CTT.menu.backDropAlphaSlider:SetValue(1)
-    -- cttMenuOptions.fontPickerDropDown = false
-    -- CTT_SetTrackerSizeOnLogin()
-    -- cttStopwatchGuiTimeText:SetTextColor(255,255,255)
-    -- CTT_UpdateText(cttMenuOptions.timeValues[1], cttMenuOptions.timeValues[2], cttMenuOptions.timeValues[3], cttMenuOptions.timeValues[5], cttMenuOptions.dropdownValue,1)
 end
 
 -- function to handle showing the tracker based on instance type settings
@@ -707,42 +637,6 @@ function CTT_UpdateMenuTexts(container,difficultyNumber)
     container.IceBitchTime:SetText(fightLogs[9+difficultyNumber])
 end
 
-function CTT_CoSUpdateMenuTexts(container, difficultyNumber)
-    if difficultyNumber == 1 then
-        difficultyNumber = 0
-    elseif difficultyNumber == 2 then
-        difficultyNumber = 2
-    elseif difficultyNumber == 3 then
-        difficultyNumber = 4
-    else
-        difficultyNumber = 6
-    end
-
-    container.CabalTime:SetText(cosFightLogs[1+difficultyNumber])
-    container.UunatTime:SetText(cosFightLogs[2+difficultyNumber])
-end
-
-function CTT_tepUpdateMenuTexts(container, difficultyNumber)
-    if difficultyNumber == 1 then
-        difficultyNumber = 0
-    elseif difficultyNumber == 2 then
-        difficultyNumber = 8
-    elseif difficultyNumber == 3 then
-        difficultyNumber = 16
-    else
-        difficultyNumber = 24
-    end
-
-    container.ACSTime:SetText(tepFightLogs[1+difficultyNumber])
-    container.BBTime:SetText(tepFightLogs[2+difficultyNumber])
-    container.RoATime:SetText(tepFightLogs[3+difficultyNumber])
-    container.LATime:SetText(tepFightLogs[4+difficultyNumber])
-    container.OTime:SetText(tepFightLogs[5+difficultyNumber])
-    container.TQCTime:SetText(tepFightLogs[6+difficultyNumber])
-    container.ZHoNTime:SetText(tepFightLogs[7+difficultyNumber])
-    container.QATime:SetText(tepFightLogs[8+difficultyNumber])
-end
-
 
 --|-----------------------|
 --| AceGUI Options Menu --|
@@ -761,6 +655,7 @@ function CTT_ToggleMenu()
         else
             CTT.menu:Show()
             CTT:Print(L["Options menu loaded, for other commands use /ctt help!"])
+            --CTT:Print(date("%A"))
         end
     end
 end
@@ -1038,269 +933,14 @@ local function OptionsMenu(container)
 end
     
 -- function that draws the widgets for the second tab
-local function BattleForDazaralor(container)
+local function DisplayResultsByDateForRaid(container)
+    --  TODO Need to add this view
     -- obj:SetPoint(point, relativeFrame, relativePoint, ofsx, ofsy);
     -- obj:SetPoint(point, relativeFrame, relativePoint);
     -- obj:SetPoint(point, ofsx, ofsy);
     -- obj:SetPoint(point);
     -- negative ofsx goes left, positive goes right
     -- negative ofsy goes down, positive goes up
-
-    -- drop down menu (to load difficulty into the window)
-    local difficultyDropDown = AceGUI:Create("Dropdown")
-    difficultyDropDown:SetLabel(" Instance Difficulty")
-    difficultyDropDown:SetFullWidth(true)
-    difficultyDropDown:SetMultiselect(false)
-    difficultyDropDown:ClearAllPoints()
-    difficultyDropDown:SetList(difficultyList)
-    if cttMenuOptions.difficultyDropDown then
-        difficultyDropDown:SetText(difficultyList[cttMenuOptions.difficultyDropDown])
-        difficultyDropDown:SetValue(cttMenuOptions.difficultyDropDown)
-    else
-        difficultyDropDown:SetText(difficultyDropDown[1])
-        difficultyDropDown:SetValue(1)
-    end
-    difficultyDropDown:SetPoint("RIGHT", container.tab, "LEFT")
-    difficultyDropDown:SetCallback("OnValueChanged", CTT_DifficultyDropDown)
-    container:AddChild(difficultyDropDown)
-    container.difficultyDropDown = difficultyDropDown
-
-    local CoL = AceGUI:Create("Label")
-    CoL:SetText("Champion of Light: ")
-    CoL:SetColor(255,255,0)
-    CoL:SetFont("Fonts\\MORPHEUS_CYR.TTF", 12)
-    CoL:SetWidth(112)
-    CoL:ClearAllPoints()
-    CoL:SetPoint("LEFT", container.tab, "LEFT", 6, 10)
-    container:AddChild(CoL)
-    container.CoL = CoL
-
-    local CoLTime = AceGUI:Create("Label")
-    CoLTime:SetText(fightLogs[1])
-    CoLTime:SetColor(255,255,255)
-    CoLTime:SetFont("Fonts\\MORPHEUS_CYR.TTF", 16)
-    CoLTime:ClearAllPoints()
-    CoLTime:SetPoint("LEFT", container.tab, "CENTER", 10, 0)
-    container:AddChild(CoLTime)
-    container.CoLTime = CoLTime
-
-    local separator1 = AceGUI:Create("Label")
-    separator1:SetFullWidth(true)
-    separator1:SetText(" ")
-    separator1:ClearAllPoints()
-    separator1:SetPoint("LEFT", container.tab, "LEFT", 6, 10)
-    container:AddChild(separator1)
-    container.separator1 = separator1
-
-    local Grong = AceGUI:Create("Label")
-    Grong:SetText("Grong: ")
-    Grong:SetColor(255,255,0)
-    Grong:SetFont("Fonts\\MORPHEUS_CYR.TTF", 12)
-    Grong:SetWidth(112)
-    Grong:ClearAllPoints()
-    Grong:SetPoint("LEFT", container.tab, "LEFT", 6, 10)
-    container:AddChild(Grong)
-    container.Grong = Grong
-
-    local GrongTime = AceGUI:Create("Label")
-    GrongTime:SetText(fightLogs[2])
-    GrongTime:SetColor(255,255,255)
-    GrongTime:SetFont("Fonts\\MORPHEUS_CYR.TTF", 16)
-    GrongTime:ClearAllPoints()
-    GrongTime:SetPoint("LEFT", container.tab, "CENTER", 10, 0)
-    container:AddChild(GrongTime)
-    container.GrongTime = GrongTime
-
-    local separator2 = AceGUI:Create("Label")
-    separator2:SetFullWidth(true)
-    separator2:SetText(" ")
-    separator2:ClearAllPoints()
-    separator2:SetPoint("LEFT", container.tab, "LEFT", 6, 10)
-    container:AddChild(separator2)
-    container.separator2 = separator2
-
-    local Monks = AceGUI:Create("Label")
-    Monks:SetText("Jadefire Masters: ")
-    Monks:SetColor(255,255,0)
-    Monks:SetFont("Fonts\\MORPHEUS_CYR.TTF", 12)
-    Monks:SetWidth(112)
-    Monks:ClearAllPoints()
-    Monks:SetPoint("LEFT", container.tab, "LEFT", 6, 10)
-    container:AddChild(Monks)
-    container.Monks = Monks
-
-    local MonksTime = AceGUI:Create("Label")
-    MonksTime:SetText(fightLogs[3])
-    MonksTime:SetColor(255,255,255)
-    MonksTime:SetFont("Fonts\\MORPHEUS_CYR.TTF", 16)
-    MonksTime:ClearAllPoints()
-    MonksTime:SetPoint("LEFT", container.tab, "CENTER", 10, 0)
-    container:AddChild(MonksTime)
-    container.MonksTime = MonksTime
-
-    local separator3 = AceGUI:Create("Label")
-    separator3:SetFullWidth(true)
-    separator3:SetText(" ")
-    separator3:ClearAllPoints()
-    separator3:SetPoint("LEFT", container.tab, "LEFT", 6, 10)
-    container:AddChild(separator3)
-    container.separator3 = separator3
-
-    local Opulence = AceGUI:Create("Label")
-    Opulence:SetText("Opulence: ")
-    Opulence:SetColor(255,255,0)
-    Opulence:SetFont("Fonts\\MORPHEUS_CYR.TTF", 12)
-    Opulence:SetWidth(112)
-    Opulence:ClearAllPoints()
-    Opulence:SetPoint("LEFT", container.tab, "LEFT", 6, 10)
-    container:AddChild(Opulence)
-    container.Opulence = Opulence
-
-    local OpulenceTime = AceGUI:Create("Label")
-    OpulenceTime:SetText(fightLogs[4])
-    OpulenceTime:SetColor(255,255,255)
-    OpulenceTime:SetFont("Fonts\\MORPHEUS_CYR.TTF", 16)
-    OpulenceTime:ClearAllPoints()
-    OpulenceTime:SetPoint("LEFT", container.tab, "CENTER", 10, 0)
-    container:AddChild(OpulenceTime)
-    container.OpulenceTime = OpulenceTime
-
-    local separator4 = AceGUI:Create("Label")
-    separator4:SetFullWidth(true)
-    separator4:SetText(" ")
-    separator4:ClearAllPoints()
-    separator4:SetPoint("LEFT", container.tab, "LEFT", 6, 10)
-    container:AddChild(separator4)
-    container.separator4 = separator4
-
-    local Council = AceGUI:Create("Label")
-    Council:SetText("Conclave of the Chosen: ")
-    Council:SetColor(255,255,0)
-    Council:SetFont("Fonts\\MORPHEUS_CYR.TTF", 12)
-    Council:SetWidth(112)
-    Council:ClearAllPoints()
-    Council:SetPoint("LEFT", container.tab, "LEFT", 6, 10)
-    container:AddChild(Council)
-    container.Grong = Council
-
-    local CouncilTime = AceGUI:Create("Label")
-    CouncilTime:SetText(fightLogs[5])
-    CouncilTime:SetColor(255,255,255)
-    CouncilTime:SetFont("Fonts\\MORPHEUS_CYR.TTF", 16)
-    CouncilTime:ClearAllPoints()
-    CouncilTime:SetPoint("LEFT", container.tab, "CENTER", 10, 0)
-    container:AddChild(CouncilTime)
-    container.CouncilTime = CouncilTime
-
-    local separator5 = AceGUI:Create("Label")
-    separator5:SetFullWidth(true)
-    separator5:SetText(" ")
-    separator5:ClearAllPoints()
-    separator5:SetPoint("LEFT", container.tab, "LEFT", 6, 10)
-    container:AddChild(separator5)
-    container.separator5 = separator5
-
-    local King = AceGUI:Create("Label")
-    King:SetText("King Rastakhan: ")
-    King:SetColor(255,255,0)
-    King:SetFont("Fonts\\MORPHEUS_CYR.TTF", 12)
-    King:SetWidth(112)
-    King:ClearAllPoints()
-    King:SetPoint("LEFT", container.tab, "LEFT", 6, 10)
-    container:AddChild(King)
-    container.King = King
-
-    local KingTime = AceGUI:Create("Label")
-    KingTime:SetText(fightLogs[6])
-    KingTime:SetColor(255,255,255)
-    KingTime:SetFont("Fonts\\MORPHEUS_CYR.TTF", 16)
-    KingTime:ClearAllPoints()
-    KingTime:SetPoint("LEFT", container.tab, "CENTER", 10, 0)
-    container:AddChild(KingTime)
-    container.KingTime = KingTime
-
-    local separator6 = AceGUI:Create("Label")
-    separator6:SetFullWidth(true)
-    separator6:SetText(" ")
-    separator6:ClearAllPoints()
-    separator6:SetPoint("LEFT", container.tab, "LEFT", 6, 10)
-    container:AddChild(separator6)
-    container.separator6 = separator6
-
-    local Mekka = AceGUI:Create("Label")
-    Mekka:SetText("High Tinker Mekkatorque: ")
-    Mekka:SetColor(255,255,0)
-    Mekka:SetFont("Fonts\\MORPHEUS_CYR.TTF", 12)
-    Mekka:SetWidth(112)
-    Mekka:ClearAllPoints()
-    Mekka:SetPoint("LEFT", container.tab, "LEFT", 6, 10)
-    container:AddChild(Mekka)
-    container.Mekka = Mekka
-
-    local MekkaTime = AceGUI:Create("Label")
-    MekkaTime:SetText(fightLogs[7])
-    MekkaTime:SetColor(255,255,255)
-    MekkaTime:SetFont("Fonts\\MORPHEUS_CYR.TTF", 16)
-    MekkaTime:ClearAllPoints()
-    MekkaTime:SetPoint("LEFT", container.tab, "CENTER", 10, 0)
-    container:AddChild(MekkaTime)
-    container.MekkaTime = MekkaTime
-
-    local separator7 = AceGUI:Create("Label")
-    separator7:SetFullWidth(true)
-    separator7:SetText(" ")
-    separator7:ClearAllPoints()
-    separator7:SetPoint("LEFT", container.tab, "LEFT", 6, 10)
-    container:AddChild(separator7)
-    container.separator7 = separator7
-
-    local Stormwall = AceGUI:Create("Label")
-    Stormwall:SetText("Stormwall Blockade: ")
-    Stormwall:SetColor(255,255,0)
-    Stormwall:SetFont("Fonts\\MORPHEUS_CYR.TTF", 12)
-    Stormwall:SetWidth(112)
-    Stormwall:ClearAllPoints()
-    Stormwall:SetPoint("LEFT", container.tab, "LEFT", 6, 10)
-    container:AddChild(Stormwall)
-    container.Stormwall = Stormwall
-
-    local StormwallTime = AceGUI:Create("Label")
-    StormwallTime:SetText(fightLogs[8])
-    StormwallTime:SetColor(255,255,255)
-    StormwallTime:SetFont("Fonts\\MORPHEUS_CYR.TTF", 16)
-    StormwallTime:ClearAllPoints()
-    StormwallTime:SetPoint("LEFT", container.tab, "CENTER", 10, 0)
-    container:AddChild(StormwallTime)
-    container.StormwallTime = StormwallTime
-
-    local separator8 = AceGUI:Create("Label")
-    separator8:SetFullWidth(true)
-    separator8:SetText(" ")
-    separator8:ClearAllPoints()
-    separator8:SetPoint("LEFT", container.tab, "LEFT", 6, 10)
-    container:AddChild(separator8)
-    container.separator8 = separator8
-
-    local IceBitch = AceGUI:Create("Label")
-    IceBitch:SetText("Lady Jaina Proudmoore: ")
-    IceBitch:SetColor(255,255,0)
-    IceBitch:SetFont("Fonts\\MORPHEUS_CYR.TTF", 12)
-    IceBitch:SetWidth(112)
-    IceBitch:ClearAllPoints()
-    IceBitch:SetPoint("LEFT", container.tab, "LEFT", 6, 10)
-    container:AddChild(IceBitch)
-    container.IceBitch = IceBitch
-
-    local IceBitchTime = AceGUI:Create("Label")
-    IceBitchTime:SetText(fightLogs[9])
-    IceBitchTime:SetColor(255,255,255)
-    IceBitchTime:SetFont("Fonts\\MORPHEUS_CYR.TTF", 16)
-    IceBitchTime:ClearAllPoints()
-    IceBitchTime:SetPoint("LEFT", container.tab, "CENTER", 10, 0)
-    container:AddChild(IceBitchTime)
-    container.IceBitchTime = IceBitchTime
-
-    CTT_UpdateMenuTexts(container,cttMenuOptions.difficultyDropDown)
 
 end
 
@@ -1348,142 +988,32 @@ end
 --|  CTT Debug Functions  |
 --|-----------------------|
 
---[===[@debug@
---@end-debug@]===]
+-- function SimulateBossKill(arg6,arg2,arg3,arg4,testSec,testMin,savedSec,savedMin)
+--     -- Need to add code here for debugging/testing later
+--     print(table.getn(SecondsSpentInCombatDuringRaid))
+--     print(SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid)])
+-- end
 
---[===[@debug@
+-- function SimulateClassicTimes()
+-- end
 
-function SimulateBossKill(arg6,arg2,arg3,arg4,testSec,testMin,savedSec,savedMin)
-    local diffIDKey = 0
-    if arg6 == 1 then
-        CTT:Print("Starting To Check BoD Bosses")
-        for k,v in pairs(BoDBosses) do
-            if v == arg2 then
-                if arg4 == 14 then 
-                    diffIDKey = 9
-                elseif arg4 == 15 then
-                    diffIDKey = 18 
-                elseif arg4 == 16 then 
-                    diffIDKey = 27
-                end
-                if (savedMin=="00" and savedSec=="00") then
-                    --fightLogs[diffIDKey + k] = text
-                    CTT:Print("First Kill Recorded")
-                else
-                    local mins,secs = strsplit(":",fightLogs[k + diffIDKey])
 
-                    if tonumber(testSec) < tonumber(savedSec) then
-                        if (tonumber(testMin) <= tonumber(savedMin)) then
-                            CTT:Print("Seconds was lower.")
-                            local text = tostring(testMin..":"..testSec)
-                            CTT:Print("Fight was shorter because of seconds, recorded new fight of length: "..text)
-                        end
-                    elseif tonumber(testMin) < tonumber(savedMin) then
-                        CTT:Print("Minutes was lower.")
-                        local text = tostring(testMin..":"..testSec)
-                        CTT:Print("Fight was shorter because of minutes, recorded new fight of length: "..text)
-                    else
-                        CTT:Print("The new kill was slower than the saved kill.")
-                    end
-                end
-                break
-            end
-        end
+-- function CallSimulateBossKill()
+--     -- 5:50 (new kill)  vs 4:50 (saved kill) - fail
+--     -- 4:45 (new kill)  vs 4:50 (saved kill) - succeed (seconds)
+--     -- 5:50 (new kill)  vs 6:50 (saved kill) - succeed (minute)
+--     -- 5:50 (new kill)  vs 5:50 (saved kill) - ??
+--     -- 5:50 (new kill)  vs 00:00 (saved kill)- succeed (first kill)
 
-        CTT:Print("Starting To Check COS Bosses")
-        for k,v in pairs(CoSBosses) do
-            if v == arg2 then
-                if arg4 == 14 then 
-                    diffIDKey = 2
-                elseif arg4 == 15 then
-                    diffIDKey = 4 
-                elseif arg4 == 16 then 
-                    diffIDKey = 6
-                end
-                if (savedMin=="00" and savedSec=="00") then
-                    --fightLogs[diffIDKey + k] = text
-                    CTT:Print("First Kill Recorded")
-                else
-                    local mins,secs = strsplit(":",fightLogs[k + diffIDKey])
+--     CTT:Print("Test 1 starting: ")
+--     SimulateBossKill(1, 2263, "Grong", 14, 50, 5, 50, 4)
+--     CTT:Print("Test 2 starting: ")
+--     SimulateBossKill(1, 2263, "Grong", 14, 45, 4, 50, 4)
+--     CTT:Print("Test 3 starting: ")
+--     SimulateBossKill(1, 2263, "Grong", 14, 50, 5, 50, 6)
+--     CTT:Print("Test 4 starting: ")
+--     SimulateBossKill(1, 2263, "Grong", 14, 50, 5, 50, 5)
+--     CTT:Print("Test 5 starting: ")
+--     SimulateBossKill(1, 2361, "Queen Azshara", 14, 50, 5, "00", "00")
 
-                    if tonumber(testSec) < tonumber(savedSec) then
-                        if (tonumber(testMin) <= tonumber(savedMin)) then
-                            CTT:Print("Seconds was lower.")
-                            local text = tostring(testMin..":"..testSec)
-                            CTT:Print("Fight was shorter because of seconds, recorded new fight of length: "..text)
-                        end
-                    elseif tonumber(testMin) < tonumber(savedMin) then
-                        CTT:Print("Minutes was lower.")
-                        local text = tostring(testMin..":"..testSec)
-                        CTT:Print("Fight was shorter because of minutes, recorded new fight of length: "..text)
-                    else
-                        CTT:Print("The new kill was slower than the saved kill.")
-                    end
-                end
-                break
-            end
-        end
-        CTT:Print("Starting To Check TEP Bosses")
-        for k,v in pairs(TEPBosses) do
-            if v == arg2 then
-                if arg4 == 14 then 
-                    diffIDKey = 8
-                elseif arg4 == 15 then
-                    diffIDKey = 16
-                elseif arg4 == 16 then 
-                    diffIDKey = 24
-                end
-                if (savedMin=="00" and savedSec=="00") then
-                    --fightLogs[diffIDKey + k] = text
-                    CTT:Print("First Kill Recorded")
-                else
-                    local mins,secs = strsplit(":",fightLogs[k + diffIDKey])
-
-                    if tonumber(testSec) < tonumber(savedSec) then
-                        if (tonumber(testMin) <= tonumber(savedMin)) then
-                            CTT:Print("Seconds was lower.")
-                            local text = tostring(testMin..":"..testSec)
-                            CTT:Print("Fight was shorter because of seconds, recorded new fight of length: "..text)
-                        end
-                    elseif tonumber(testMin) < tonumber(savedMin) then
-                        CTT:Print("Minutes was lower.")
-                        local text = tostring(testMin..":"..testSec)
-                        CTT:Print("Fight was shorter because of minutes, recorded new fight of length: "..text)
-                    else
-                        CTT:Print("The new kill was slower than the saved kill.")
-                    end
-                end
-                break
-            end
-        end
-        
-        CTT_DisplayResultsBosses(arg3, true)
-    else
-        --local index = table.getn(fightLogs)
-        --fightLogs[index][7] = {hours, minutes, seconds, totalSeconds, miliseconds}
-        --cttMenuOptions.timeValues = {hours, minutes, seconds, totalSeconds, miliseconds}
-        CTT_DisplayResultsBosses(arg3, false)
-    end
-end
-
-function CallSimulateBossKill()
-    -- 5:50 (new kill)  vs 4:50 (saved kill) - fail
-    -- 4:45 (new kill)  vs 4:50 (saved kill) - succeed (seconds)
-    -- 5:50 (new kill)  vs 6:50 (saved kill) - succeed (minute)
-    -- 5:50 (new kill)  vs 5:50 (saved kill) - ??
-    -- 5:50 (new kill)  vs 00:00 (saved kill)- succeed (first kill)
-
-    CTT:Print("Test 1 starting: ")
-    SimulateBossKill(1, 2263, "Grong", 14, 50, 5, 50, 4)
-    CTT:Print("Test 2 starting: ")
-    SimulateBossKill(1, 2263, "Grong", 14, 45, 4, 50, 4)
-    CTT:Print("Test 3 starting: ")
-    SimulateBossKill(1, 2263, "Grong", 14, 50, 5, 50, 6)
-    CTT:Print("Test 4 starting: ")
-    SimulateBossKill(1, 2263, "Grong", 14, 50, 5, 50, 5)
-    CTT:Print("Test 5 starting: ")
-    SimulateBossKill(1, 2361, "Queen Azshara", 14, 50, 5, "00", "00")
-
-end
-
---@end-debug@]===]
+-- end

@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/gkute/CombatTimeTracker.svg?branch=master)](https://travis-ci.com/gkute/CombatTimeTracker)
+[![Build Status](https://travis-ci.com/gkute/CombatTimeTrackerClassic.svg?branch=master)](https://travis-ci.com/gkute/CombatTimeTrackerClassic)
 [![CombatTimeTracker on Discord](https://img.shields.io/badge/discord-CombatTimeTracker-blue.svg)](https://discord.gg/37CUxNn)
 # Combat Time Tracker
 

@@ -1,14 +1,14 @@
 ## Interface: 11304
-## Title: Combat Time Tracker
-## Version: v1.0
+## Title: Combat Time Tracker Classic
+## Version: v1.0-alpha
 ## Notes: Classic version of CTT
 ## Author: Bowtiesphd
 ## OptionalDeps: Ace3
 ## X-Embeds: Ace3
-## X-Curse-Project-ID: 305012
+## X-Curse-Project-ID: 386969
 
 
-## SavedVariablesPerCharacter: longestMin, longestSec, cttMenuOptions, fightLogs, cttTextFormatOptions, secondsSpentInRaid
+## SavedVariablesPerCharacter: longestMin, longestSec, cttMenuOptions, fightLogs, cttTextFormatOptions, SecondsSpentInCombatDuringRaid, SecondsSpentInRaidOverall
 ## SavedVariables: cttDB
 
 embeds.xml
