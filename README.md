@@ -6,7 +6,6 @@
 
 * Automatically starts a custom stopwatch when entering combat.
 * Automatically stops the stopwatch when exiting combat.
-* Tracks fastest kill times for each BoD fight on each difficulty.
 * Check to see if it's your longest fight, then updates if it was.
 * Option to change text color.
 * Option to change the text format on the tracker.
