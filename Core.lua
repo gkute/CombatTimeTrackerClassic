@@ -361,23 +361,17 @@ function CTT:PLAYER_ENTERING_WORLD()
 end
 
 function CTT:ZONE_CHANGED()
-    --[===[@debug@
     --self:Print("Zone_Changed: " .. GetRealZoneText())
     --self:Print("Zone_Changed: " .. GetSubZoneText())
-    --@end-debug@]===]
 end
 
 function CTT:ZONE_CHANGED_INDOORS()
-    --[===[@debug@
     --self:Print("Zone_Changed_Indoors: " .. GetRealZoneText())
     --self:Print("Zone_Changed_Indoors: " .. GetSubZoneText())
-    --@end-debug@]===]
 end
 
 function CTT:ZONE_CHANGED_NEW_AREA()
-    --[===[@debug@
     --self:Print("Zone_Changed_New_Area: " .. GetRealZoneText())
-    --@end-debug@]===]
     CTT_InstanceTypeDisplay(cttMenuOptions.instanceType) 
 end
 
