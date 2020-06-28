@@ -406,6 +406,8 @@ function CTT:SlashCommands(input)
     elseif command == "reset" then
         cttMenuOptions.timeValues = {"00","00","00","00"}
         CTT_UpdateText(cttMenuOptions.timeValues[1], cttMenuOptions.timeValues[2], cttMenuOptions.timeValues[3], cttMenuOptions.timeValues[5],cttMenuOptions.dropdownValue,1)
+        SecondsSpentInCombatDuringRaid = {"0"}
+        SecondsSpentInRaidOverall = {"0"}
         CTT:Print(L["Stopwatch has been reset!"])
     elseif command == "show" then
         cttStopwatchGui:Show()
@@ -417,9 +419,8 @@ function CTT:SlashCommands(input)
         longestMin = 0
         longestSec = 0
         fightLogs = {}
-        for i=1,36 do
-            fightLogs[i] = "00:00"
-        end
+        SecondsSpentInCombatDuringRaid = {"0"}
+        SecondsSpentInRaidOverall = {"0"}
         CTT:Print(L["Combat Time Tracker has been reset to default settings!"])
     elseif command == "longest" then
         CTT:Print("Your longest fight took (MM:SS): "..longestMin..":"..longestSec..".")
@@ -444,8 +445,8 @@ function CTT:SlashCommands(input)
         SecondsSpentInRaidOverall[table.getn(SecondsSpentInRaidOverall) + 1] = "0"
         SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid) + 1] = "0"
         CTT:Print("Start of tracking raid time has ended.")
-    -- elseif command == "debug" then
-    --     CallSimulateBossKill()
+    elseif command == "debug" then
+        CallSimulateBossKill()
     end
     
 end
@@ -457,7 +458,7 @@ end
 
 -- function to check if a ui reset is needed.
 function CTT_CheckForReload()
-    if table.getn(fightLogs) < 36 then cttMenuOptions.uiReset = true else cttMenuOptions.uiReset = false end
+
 end
 
 -- function to handle showing the tracker based on instance type settings
@@ -789,6 +790,26 @@ end
 --|-----------------------|
 
 
+-- Get Hours spent based on input
+local function GetHistoricalTimes(seconds)
+    local hours = floor(seconds/3600)
+    local minutes = floor((seconds-floor(seconds/3600)*3600)/60)
+    local seconds = floor(seconds-floor(seconds/3600)*3600-floor((seconds-floor(seconds/3600)*3600)/60)*60)
+    if hours < 10 then
+        local temp = tostring(hours)
+        hours = "0" .. temp
+    end
+    if minutes < 10 then
+        local temp = tostring(minutes)
+        minutes = "0" .. temp
+    end
+    if seconds < 10 then
+        local temp = tostring(seconds)
+        seconds = "0" .. temp
+    end
+    return hours, minutes, seconds
+end
+
 --function that draws the widgets for the first tab
 local function OptionsMenu(container)
     -- frame lock button
@@ -925,6 +946,35 @@ local function OptionsMenu(container)
     -- container:AddChild(default)
     -- container.default = default
 end
+
+local function Historical(container)
+    scrollcontainer = AceGUI:Create("InlineGroup") -- "InlineGroup" is also good
+    scrollcontainer:SetFullWidth(true)
+    scrollcontainer:SetFullHeight(true) -- probably?
+    scrollcontainer:SetLayout("Fill") -- important!
+
+    container:AddChild(scrollcontainer)
+
+    scroll = AceGUI:Create("ScrollFrame")
+    scroll:SetLayout("Flow") -- probably?
+    scrollcontainer:AddChild(scroll)
+
+    
+
+    for i,v in ipairs(SecondsSpentInCombatDuringRaid) do
+        local hoursSpent, minsSpent, secsSpent = GetHistoricalTimes(SecondsSpentInCombatDuringRaid[i])
+        local totalHoursSpent, totalMinsSpent, totalSecsSpent = GetHistoricalTimes(SecondsSpentInRaidOverall[i])
+        local value = "value".. i
+        value = AceGUI:Create("Label")
+        value:SetText("You spent " .. hoursSpent .. ":" .. minsSpent .. ":" .. secsSpent .. " out of " .. totalHoursSpent .. ":" .. totalMinsSpent .. ":" .. totalSecsSpent .. " in raid or " .. floor((SecondsSpentInCombatDuringRaid[i]/SecondsSpentInRaidOverall[i]*100)).."% total.")
+        value:SetColor(255,255,0)
+        value:SetFont("Fonts\\MORPHEUS_CYR.TTF", 14)
+        value:SetFullWidth(true)
+        value:ClearAllPoints()
+        value:SetPoint("LEFT", container.tab, "LEFT", 6, 10)
+        scroll:AddChild(value)
+    end
+end
     
 -- function that draws the widgets for the second tab
 local function DisplayResultsByDateForRaid(container)
@@ -942,6 +992,8 @@ local function SelectGroup(container, event, group)
     container:ReleaseChildren()
     if group == "options" then
         OptionsMenu(container)
+    elseif group == "history" then
+        Historical(container)
     end
 end
 function CTT:CreateOptionsMenu()
@@ -966,7 +1018,7 @@ function CTT:CreateOptionsMenu()
     local tab =  AceGUI:Create("TabGroup")
     tab:SetLayout("Flow")
     -- Setup which tabs to show
-    tab:SetTabs({{text="Options", value="options"}})
+    tab:SetTabs({{text="Options", value="options"}, {text="Historical Records", value ="history"}})
     -- Register callback
     tab:SetCallback("OnGroupSelected", SelectGroup)
     -- Set initial Tab (this will fire the OnGroupSelected callback)
@@ -982,32 +1034,39 @@ end
 --|  CTT Debug Functions  |
 --|-----------------------|
 
--- function SimulateBossKill(arg6,arg2,arg3,arg4,testSec,testMin,savedSec,savedMin)
---     -- Need to add code here for debugging/testing later
---     print(table.getn(SecondsSpentInCombatDuringRaid))
---     print(SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid)])
--- end
+function SimulateBossKill(arg6,arg2,arg3,arg4,testSec,testMin,savedSec,savedMin)
+    -- Need to add code here for debugging/testing later
+end
 
--- function SimulateClassicTimes()
--- end
+function SimulateTotalTimeInRaidStart()
+    CTT:Print("Start of tracking raid time has started.")
+end
+
+function SimulateTotalTimeInRaidEnd(secondsToSimulate, totalSeconds)
+    SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid)] = secondsToSimulate
+    SecondsSpentInRaidOverall[table.getn(SecondsSpentInRaidOverall)] = totalSeconds
+    SecondsSpentInRaidOverall[table.getn(SecondsSpentInRaidOverall) + 1] = "0"
+    SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid) + 1] = "0"
+    CTT:Print("Start of tracking raid time has ended.")
+end
 
 
--- function CallSimulateBossKill()
---     -- 5:50 (new kill)  vs 4:50 (saved kill) - fail
---     -- 4:45 (new kill)  vs 4:50 (saved kill) - succeed (seconds)
---     -- 5:50 (new kill)  vs 6:50 (saved kill) - succeed (minute)
---     -- 5:50 (new kill)  vs 5:50 (saved kill) - ??
---     -- 5:50 (new kill)  vs 00:00 (saved kill)- succeed (first kill)
+function CallSimulateBossKill()
 
---     CTT:Print("Test 1 starting: ")
---     SimulateBossKill(1, 2263, "Grong", 14, 50, 5, 50, 4)
---     CTT:Print("Test 2 starting: ")
---     SimulateBossKill(1, 2263, "Grong", 14, 45, 4, 50, 4)
---     CTT:Print("Test 3 starting: ")
---     SimulateBossKill(1, 2263, "Grong", 14, 50, 5, 50, 6)
---     CTT:Print("Test 4 starting: ")
---     SimulateBossKill(1, 2263, "Grong", 14, 50, 5, 50, 5)
---     CTT:Print("Test 5 starting: ")
---     SimulateBossKill(1, 2361, "Queen Azshara", 14, 50, 5, "00", "00")
+    CTT:Print("Test 1 starting: ")
+    SimulateTotalTimeInRaidStart()
+    SimulateTotalTimeInRaidEnd(400,400)
+    CTT:Print("Test 2 starting: ")
+    SimulateTotalTimeInRaidStart()
+    SimulateTotalTimeInRaidEnd(299,867)
+    CTT:Print("Test 3 starting: ")
+    SimulateTotalTimeInRaidStart()
+    SimulateTotalTimeInRaidEnd(158,323)
+    CTT:Print("Test 4 starting: ")
+    SimulateTotalTimeInRaidStart()
+    SimulateTotalTimeInRaidEnd(200,800)
+    CTT:Print("Test 5 starting: ")
+    SimulateTotalTimeInRaidStart()
+    SimulateTotalTimeInRaidEnd(100,1000)
 
--- end
+end
