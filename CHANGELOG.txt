@@ -1,3 +1,3 @@
 ##Changelog:
-###v1.1-aplha
-* Adding tracking to the CTT Menu
+###v1.2a
+* Fixing some time tracking bugs?

@@ -291,10 +291,13 @@ function CTT:PLAYER_REGEN_ENABLED()
         else
             CTT_DisplayResults(false)
         end
-        print(table.getn(SecondsSpentInCombatDuringRaid))
-        SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid)] = SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid)] + totalSeconds
-
+        if InClassicRaidZone then
+            SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid)] = SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid)] + totalSeconds
+        end
     else
+        if InClassicRaidZone then
+            SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid)] = SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid)] + totalSeconds
+        end
         return 
     end
 end
@@ -317,14 +320,12 @@ function CTT:Encounter_End(...)
     end
     local arg1, arg2, arg3, arg4, arg5, arg6 = ...
     local diffIDKey = 0
-    if arg6 == 1 then
-        -- if during scheduled raid keep track of total combat time
-        if isRaidTime then
-            local raidTime = tonumber(secondsSpentInRaid[table.getn(secondsSpentInRaid)]) + totalSeconds
-            secondsSpentInRaid = tostring(raidTime)
-        end
+    if arg6 == 1 and InClassicRaidZone then
         SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid)] = SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid)] + totalSeconds
         CTT_DisplayResultsBosses(arg3, true)
+    else if InClassicRaidZone then
+        SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid)] = SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid)] + totalSeconds
+        CTT_DisplayResultsBosses(arg3, false)
     else
         CTT_DisplayResultsBosses(arg3, false)
     end

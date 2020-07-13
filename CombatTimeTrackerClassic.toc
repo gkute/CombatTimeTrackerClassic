@@ -1,6 +1,6 @@
 ## Interface: 11304
 ## Title: Combat Time Tracker Classic
-## Version: v1.1-alpha
+## Version: v1.2a
 ## Notes: Classic version of CTT
 ## Author: Bowtiesphd
 ## OptionalDeps: Ace3
