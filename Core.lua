@@ -323,7 +323,7 @@ function CTT:Encounter_End(...)
     if arg6 == 1 and InClassicRaidZone then
         SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid)] = SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid)] + totalSeconds
         CTT_DisplayResultsBosses(arg3, true)
-    else if InClassicRaidZone then
+    elseif InClassicRaidZone then
         SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid)] = SecondsSpentInCombatDuringRaid[table.getn(SecondsSpentInCombatDuringRaid)] + totalSeconds
         CTT_DisplayResultsBosses(arg3, false)
     else
