@@ -1,6 +1,6 @@
 --[[
 Name: LibBabble-Race-3.0
-Revision: $Rev: 101 $
+Revision: $Rev: 98 $
 Maintainers: ckknight, nevcairiel, Ackis
 Website: http://www.wowace.com/projects/libbabble-race-3-0/
 Dependencies: None
@@ -8,7 +8,7 @@ License: MIT
 ]]
 
 local MAJOR_VERSION = "LibBabble-Race-3.0"
-local MINOR_VERSION = 90000 + tonumber(("$Rev: 101 $"):match("%d+"))
+local MINOR_VERSION = 90000 + tonumber(("$Rev: 98 $"):match("%d+"))
 
 if not LibStub then error(MAJOR_VERSION .. " requires LibStub.") end
 local lib = LibStub("LibBabble-3.0"):New(MAJOR_VERSION, MINOR_VERSION)
@@ -36,8 +36,6 @@ lib:SetBaseTranslations {
 	["Human"] = "Human",
 	["Humans"] = "Humans",
 	["Imp"] = "Imp",
-	["Kul Tiran"] = "Kul Tiran",
-	["Kul Tirans"] = "Kul Tirans",
 	["Lightforged Draenei"] = "Lightforged Draenei",
 	["Lightforged Draenei_PL"] = "Lightforged Draenei",
 	["Mag'har Orc"] = "Mag'har Orc",
@@ -90,10 +88,6 @@ elseif GAME_LOCALE == "deDE" then
 	["Human"] = "Mensch",
 	["Humans"] = "Menschen",
 	["Imp"] = "Wichtel",
-	--[[Translation missing --]]
-	--[[ ["Kul Tiran"] = "Kul Tiran",--]] 
-	--[[Translation missing --]]
-	--[[ ["Kul Tirans"] = "Kul Tirans",--]] 
 	["Lightforged Draenei"] = "Lichtgeschmiedete Draenei",
 	["Lightforged Draenei_PL"] = "Lichtgeschmiedete Draenei",
 	--[[Translation missing --]]
@@ -144,10 +138,6 @@ elseif GAME_LOCALE == "frFR" then
 	["Human"] = "Humain",
 	["Humans"] = "Humains",
 	["Imp"] = "Diablotin",
-	--[[Translation missing --]]
-	--[[ ["Kul Tiran"] = "Kul Tiran",--]] 
-	--[[Translation missing --]]
-	--[[ ["Kul Tirans"] = "Kul Tirans",--]] 
 	["Lightforged Draenei"] = "Draeneï sancteforge",
 	--[[Translation missing --]]
 	--[[ ["Lightforged Draenei_PL"] = "Lightforged Draenei",--]] 
@@ -200,10 +190,6 @@ elseif GAME_LOCALE == "koKR" then
 	["Human"] = "인간",
 	["Humans"] = "인간",
 	["Imp"] = "임프",
-	--[[Translation missing --]]
-	--[[ ["Kul Tiran"] = "Kul Tiran",--]] 
-	--[[Translation missing --]]
-	--[[ ["Kul Tirans"] = "Kul Tirans",--]] 
 	["Lightforged Draenei"] = "빛벼림 드레나이",
 	["Lightforged Draenei_PL"] = "빛벼림 드레나이",
 	--[[Translation missing --]]
@@ -258,10 +244,6 @@ elseif GAME_LOCALE == "esES" then
 	["Human"] = "Humano",
 	["Humans"] = "Humanos",
 	["Imp"] = "Diablillo",
-	--[[Translation missing --]]
-	--[[ ["Kul Tiran"] = "Kul Tiran",--]] 
-	--[[Translation missing --]]
-	--[[ ["Kul Tirans"] = "Kul Tirans",--]] 
 	--[[Translation missing --]]
 	--[[ ["Lightforged Draenei"] = "Lightforged Draenei",--]] 
 	--[[Translation missing --]]
@@ -325,10 +307,6 @@ elseif GAME_LOCALE == "esMX" then
 	["Humans"] = "Humanos",
 	["Imp"] = "Diablillo",
 	--[[Translation missing --]]
-	--[[ ["Kul Tiran"] = "Kul Tiran",--]] 
-	--[[Translation missing --]]
-	--[[ ["Kul Tirans"] = "Kul Tirans",--]] 
-	--[[Translation missing --]]
 	--[[ ["Lightforged Draenei"] = "Lightforged Draenei",--]] 
 	--[[Translation missing --]]
 	--[[ ["Lightforged Draenei_PL"] = "Lightforged Draenei",--]] 
@@ -390,10 +368,6 @@ elseif GAME_LOCALE == "ptBR" then
 	["Human"] = "Humano",
 	["Humans"] = "Humanos",
 	["Imp"] = "Diabrete",
-	--[[Translation missing --]]
-	--[[ ["Kul Tiran"] = "Kul Tiran",--]] 
-	--[[Translation missing --]]
-	--[[ ["Kul Tirans"] = "Kul Tirans",--]] 
 	--[[Translation missing --]]
 	--[[ ["Lightforged Draenei"] = "Lightforged Draenei",--]] 
 	--[[Translation missing --]]
@@ -457,10 +431,6 @@ elseif GAME_LOCALE == "itIT" then
 	["Humans"] = "Umani",
 	["Imp"] = "Folletto",
 	--[[Translation missing --]]
-	--[[ ["Kul Tiran"] = "Kul Tiran",--]] 
-	--[[Translation missing --]]
-	--[[ ["Kul Tirans"] = "Kul Tirans",--]] 
-	--[[Translation missing --]]
 	--[[ ["Lightforged Draenei"] = "Lightforged Draenei",--]] 
 	--[[Translation missing --]]
 	--[[ ["Lightforged Draenei_PL"] = "Lightforged Draenei",--]] 
@@ -501,8 +471,8 @@ elseif GAME_LOCALE == "ruRU" then
 	lib:SetCurrentTranslations {
 	["Blood Elf"] = "Эльф крови",
 	["Blood elves"] = "Эльфы крови",
-	["Dark Iron Dwarf"] = "Дворф из клана Черного Железа",
-	["Dark Iron Dwarves"] = "Дворфы из клана Черного Железа",
+	["Dark Iron Dwarf"] = "Дворф Черного Железа",
+	["Dark Iron Dwarves"] = "Дворфы Черного Железа",
 	["Draenei"] = "Дреней",
 	["Draenei_PL"] = "Дренеи",
 	["Dwarf"] = "Дворф",
@@ -518,14 +488,12 @@ elseif GAME_LOCALE == "ruRU" then
 	["Human"] = "Человек",
 	["Humans"] = "Люди",
 	["Imp"] = "Бес",
-	--[[Translation missing --]]
-	--[[ ["Kul Tiran"] = "Kul Tiran",--]] 
-	--[[Translation missing --]]
-	--[[ ["Kul Tirans"] = "Kul Tirans",--]] 
 	["Lightforged Draenei"] = "Озаренный дреней",
 	["Lightforged Draenei_PL"] = "Озаренные дренеи",
-	["Mag'har Orc"] = "Маг'хар",
-	["Mag'har Orcs"] = "Маг'хары",
+	--[[Translation missing --]]
+	--[[ ["Mag'har Orc"] = "Mag'har Orc",--]] 
+	--[[Translation missing --]]
+	--[[ ["Mag'har Orcs"] = "Mag'har Orcs",--]] 
 	["Night Elf"] = "Ночной эльф",
 	["Night elves"] = "Ночные эльфы",
 	["Nightborne"] = "Ночнорожденный",
@@ -546,8 +514,8 @@ elseif GAME_LOCALE == "ruRU" then
 	["Voidwalker"] = "Демон Бездны",
 	["Worgen"] = "Ворген",
 	["Worgen_PL"] = "Воргены",
-	["Zandalari Troll"] = "Зандалар",
-	["Zandalari Trolls"] = "Зандалары"
+	["Zandalari Troll"] = "Зандаларский тролль",
+	["Zandalari Trolls"] = "Зандаларские тролли"
 }
 elseif GAME_LOCALE == "zhCN" then
 	lib:SetCurrentTranslations {
@@ -570,10 +538,6 @@ elseif GAME_LOCALE == "zhCN" then
 	["Human"] = "人类",
 	["Humans"] = "人类",
 	["Imp"] = "小鬼",
-	--[[Translation missing --]]
-	--[[ ["Kul Tiran"] = "Kul Tiran",--]] 
-	--[[Translation missing --]]
-	--[[ ["Kul Tirans"] = "Kul Tirans",--]] 
 	["Lightforged Draenei"] = "光铸德莱尼",
 	["Lightforged Draenei_PL"] = "光铸德莱尼",
 	--[[Translation missing --]]
@@ -624,14 +588,12 @@ elseif GAME_LOCALE == "zhTW" then
 	["Human"] = "人類",
 	["Humans"] = "人類",
 	["Imp"] = "小鬼",
-	--[[Translation missing --]]
-	--[[ ["Kul Tiran"] = "Kul Tiran",--]] 
-	--[[Translation missing --]]
-	--[[ ["Kul Tirans"] = "Kul Tirans",--]] 
 	["Lightforged Draenei"] = "光鑄德萊尼",
 	["Lightforged Draenei_PL"] = "光鑄德萊尼",
-	["Mag'har Orc"] = "瑪格哈獸人",
-	["Mag'har Orcs"] = "瑪格哈獸人",
+	--[[Translation missing --]]
+	--[[ ["Mag'har Orc"] = "Mag'har Orc",--]] 
+	--[[Translation missing --]]
+	--[[ ["Mag'har Orcs"] = "Mag'har Orcs",--]] 
 	["Night Elf"] = "夜精靈",
 	["Night elves"] = "夜精靈",
 	["Nightborne"] = "夜裔精靈",

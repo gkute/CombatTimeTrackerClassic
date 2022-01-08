@@ -38,6 +38,15 @@ local instanceTypes = {
     "Everywhere"
 }
 
+local backdropSettings = {
+    bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+    edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+    edgeSize = 16,
+    insets = { left = 4, right = 4, top = 4, bottom = 4 },
+    tile = true,
+    tileSize = 16
+}
+
 -- Get encounter ID's 
 --/run local i=1 while EJ_GetInstanceByIndex(i,true)do local a1,a2=EJ_GetInstanceByIndex(i,true)print(a1,a2)EJ_SelectInstance(a1)i=i+1 local j=1 while EJ_GetEncounterInfoByIndex(j,a1)do local b1,_,b2=EJ_GetEncounterInfoByIndex(j,a1)print(b2,b1)j=j+1 end end
 
@@ -703,6 +712,7 @@ function CTT_SetTrackerSizeOnLogin()
         cttStopwatchGui:SetHeight(cttMenuOptions.timeTrackerSize[2])
         cttStopwatchGuiTimeText:SetSize(cttMenuOptions.timeTrackerSize[1], cttMenuOptions.timeTrackerSize[2])
         cttStopwatchGuiTimeText:SetFont(cttMenuOptions.fontName,cttMenuOptions.fontVal)
+        cttStopwatchGui:SetBackdrop(backdropSettings)
         cttStopwatchGui:SetBackdropColor(0,0,0,cttMenuOptions.backDropAlphaSlider)
         cttStopwatchGui:SetBackdropBorderColor(255,255,255,cttMenuOptions.backDropAlphaSlider)
     else

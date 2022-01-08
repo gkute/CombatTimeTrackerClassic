@@ -8,7 +8,7 @@ local AGSMW = LibStub("AceGUISharedMediaWidgets-1.0")
 
 do
 	local widgetType = "LSM30_Statusbar"
-	local widgetVersion = 12
+	local widgetVersion = 11
 
 	local contentFrameCache = {}
 	local function ReturnSelf(self)
